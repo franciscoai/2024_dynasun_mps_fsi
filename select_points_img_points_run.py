@@ -13,6 +13,7 @@ odir = repo_path + '/output'
 overwrite = False # if True, the output file will be overwritten if it already exists
 color_scl = 3 # number of sigmas to control image color scale range
 roi = None # Region of interest in arcsec [top_right_x, top_right_y, bottom_left_x, bottom_left_y]
+exp_scl = 0.2 # Exponential scaling factor for the image
 #######
 # reads master list
 output_file = odir + '/selected_points.csv'
@@ -42,7 +43,8 @@ for id in id_of_events_to_process:
     fits_files = [x for _,x in sorted(zip(fits_files_dates,fits_files))]
 
 # Create an instance of the SelectImgPoints that selects points on the images and saves them to a .csv file
-select_img_points = SelectImgPoints(fits_files, output_file, diff=True, roi=roi, overwrite=overwrite, color_scl=color_scl)
+select_img_points = SelectImgPoints(fits_files, output_file, diff='consecutive_diff',
+                                    exp_scl=exp_scl, roi=roi, overwrite=overwrite, color_scl=color_scl)
 # Select points
 select_img_points.select_points()
 # Print the path of the output file
