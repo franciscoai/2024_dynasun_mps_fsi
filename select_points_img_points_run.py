@@ -16,7 +16,8 @@ roi = None # Region of interest in arcsec [top_right_x, top_right_y, bottom_left
 exp_scl = 0.2 # Exponential scaling factor for the image
 #######
 # reads master list
-output_file = odir + '/selected_points.csv'
+# ofile with id zero paded to two digits
+output_file = odir + '/selected_points_id' +  str(id_of_events_to_process[0]).zfill(2) + '.csv'
 os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
 master = pd.read_csv(master_list)
