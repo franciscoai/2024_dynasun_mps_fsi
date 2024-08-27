@@ -8,7 +8,7 @@ import numpy as np
 repo_path = os.getcwd() 
 data_path = '/gehme/data/solo/fsi'
 master_list = repo_path + '/FSI_CMEbubbles_Onlytraceable.csv'
-id_of_events_to_process = [1]
+id_of_events_to_process = [22]
 odir = repo_path + '/output'
 overwrite = True # if True, the output file will be overwritten if it already exists
 color_scl = 3 # number of sigmas to control image color scale range

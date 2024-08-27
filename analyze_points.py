@@ -10,7 +10,7 @@ mpl.use('Agg')
 
 #CONSTANTS
 repo_path = os.getcwd()
-points_list = repo_path + '/output/selected_points_id01.csv'
+points_list = repo_path + '/output/selected_points_id02.csv'
 output_dir = repo_path + '/output/plots'
 #####
 print('Computing derived quantities...')
