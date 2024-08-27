@@ -77,14 +77,16 @@ class SelectImgPoints:
                         res_map0 = map_seq[0].resample(map_seq[1].data.shape * u.pixel)
                         map_seq = sunpy.map.Map([res_map0,map_seq[1]], sequence=True)                                              
                 # Plot the image
+                if self.norm_exp:
+                    print('Normalizing by exposure times:')
+                    print(map_seq[0].exposure_time.value, map_seq[1].exposure_time.value)
+                    map_seq_0_scl = sunpy.map.Map(map_seq[0].data/map_seq[0].exposure_time.value, map_seq[0].meta)
+                    map_seq_1_scl = sunpy.map.Map(map_seq[1].data/map_seq[1].exposure_time.value, map_seq[1].meta)
+                    map_seq = sunpy.map.Map([map_seq_0_scl,map_seq_1_scl], sequence=True)                   
                 if self.exp_scl is not None:
                     map_seq_0_scl = sunpy.map.Map(map_seq[0].data**self.exp_scl, map_seq[0].meta)
                     map_seq_1_scl = sunpy.map.Map(map_seq[1].data**self.exp_scl, map_seq[1].meta)
-                    map_seq = sunpy.map.Map([map_seq_0_scl,map_seq_1_scl], sequence=True)
-                if self.norm_exp:
-                    map_seq_0_scl = sunpy.map.Map(map_seq[0].data/map_seq[0].exposure_time.value, map_seq[0].meta)
-                    map_seq_1_scl = sunpy.map.Map(map_seq[1].data/map_seq[1].exposure_time.value, map_seq[1].meta)
-                    map_seq = sunpy.map.Map([map_seq_0_scl,map_seq_1_scl], sequence=True)                    
+                    map_seq = sunpy.map.Map([map_seq_0_scl,map_seq_1_scl], sequence=True)                 
                 # uses the name of the two files to name the plot
                 title = self.fits_files[2*i+1].split('/')[-1]  + ' - ' +  self.fits_files[2*i].split('/')[-1] 
                 map = sunpy.map.Map(map_seq[1].quantity - map_seq[0].quantity, map_seq[0].meta)
@@ -132,14 +134,16 @@ class SelectImgPoints:
                         res_map0 = map_seq[0].resample(map_seq[1].data.shape * u.pixel)
                         map_seq = sunpy.map.Map([res_map0,map_seq[1]], sequence=True)                                              
                 # Plot the image
+                if self.norm_exp:
+                    print('Normalizing by exposure times:')
+                    print(map_seq[0].exposure_time.value, map_seq[1].exposure_time.value)
+                    map_seq_0_scl = sunpy.map.Map(map_seq[0].data/map_seq[0].exposure_time.value, map_seq[0].meta)
+                    map_seq_1_scl = sunpy.map.Map(map_seq[1].data/map_seq[1].exposure_time.value, map_seq[1].meta)
+                    map_seq = sunpy.map.Map([map_seq_0_scl,map_seq_1_scl], sequence=True)                    
                 if self.exp_scl is not None:
                     map_seq_0_scl = sunpy.map.Map(map_seq[0].data**self.exp_scl, map_seq[0].meta)
                     map_seq_1_scl = sunpy.map.Map(map_seq[1].data**self.exp_scl, map_seq[1].meta)
-                    map_seq = sunpy.map.Map([map_seq_0_scl,map_seq_1_scl], sequence=True)
-                if self.norm_exp:
-                    map_seq_0_scl = sunpy.map.Map(map_seq[0].data/map_seq[0].exposure_time.value, map_seq[0].meta)
-                    map_seq_1_scl = sunpy.map.Map(map_seq[1].data/map_seq[1].exposure_time.value, map_seq[1].meta)
-                    map_seq = sunpy.map.Map([map_seq_0_scl,map_seq_1_scl], sequence=True)             
+                    map_seq = sunpy.map.Map([map_seq_0_scl,map_seq_1_scl], sequence=True)         
                 # uses the name of the two files to name the plot
                 title = self.fits_files[i+1].split('/')[-1]  + ' - ' +  self.fits_files[i].split('/')[-1] 
                 map = sunpy.map.Map(map_seq[1].quantity - map_seq[0].quantity, map_seq[0].meta)
@@ -175,12 +179,14 @@ class SelectImgPoints:
                 # Read the .fits file as a Sunpy MAPS object
                 map = sunpy.map.Map(fits_file)
                 # Plot the image
+                if self.norm_exp:
+                    print('Normalizing by exposure time:')
+                    print(map.exposure_time.value)
+                    map = map.data/map.exposure_time.value
+                    map = sunpy.map.Map(map, map.meta)                   
                 if self.exp_scl is not None:
                     map = map.data**self.exp_scl
-                    map = sunpy.map.Map(map, map.meta)
-                if self.norm_exp:
-                    map = map.data/map.exposure_time.value
-                    map = sunpy.map.Map(map, map.meta)                    
+                    map = sunpy.map.Map(map, map.meta)                 
                 map.plot()
                 # Allow the user to click on the image to select points
                 points = plt.ginput(n=-1, timeout=0)
