@@ -35,13 +35,14 @@ for id in id_of_events_to_process:
         for file in files:
             if file.endswith('.fits'):
                 file_date = pd.to_datetime(file.split('_')[-2][0:15])
-                fits_files_dates.append(file_date)
                 if file_date >= start_date and file_date <= end_date:
                     fits_files.append(os.path.join(root, file))
+                    fits_files_dates.append(file_date)
     
-    #sort files by date
-    fits_files = [x for _,x in sorted(zip(fits_files_dates,fits_files))]
-
+    #sort files by file_date
+    fits_files = [x for _, x in sorted(zip(fits_files_dates, fits_files))]
+print('Files to be processed...')
+[print(f) for f in fits_files]
 # Create an instance of the SelectImgPoints that selects points on the images and saves them to a .csv file
 select_img_points = SelectImgPoints(fits_files, output_file, diff='consecutive_diff',
                                     exp_scl=exp_scl, roi=roi, overwrite=overwrite, color_scl=color_scl)

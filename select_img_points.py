@@ -59,7 +59,8 @@ class SelectImgPoints:
         # if diff, then substract two consecutive files and computes the difference before plotting and selecting points
         # each file is used one time 
             for i in range(len(self.fits_files)//2-1):
-                print('Reading image '+ str(i+1) + ' of ' + str(len(self.fits_files)//2-1))
+                print('Processing case '+ str(i+1) + ' of ' + str(len(self.fits_files)//2-1))
+                print('Images: ' + os.path.basename(self.fits_files[2*i]) + ' and ' + os.path.basename(self.fits_files[2*i+1]))
                 # Read the .fits file as a Sunpy MAPS object
                 map_seq = sunpy.map.Map([self.fits_files[2*i], self.fits_files[2*i+1]], sequence=True)
                 #checks compatible image sizes
@@ -109,7 +110,8 @@ class SelectImgPoints:
         # if diff, then substract two consecutive files and computes the difference before plotting and selecting points
         # each file is used two times
             for i in range(len(self.fits_files)-1):
-                print('Reading image '+ str(i+1) + ' of ' + str(len(self.fits_files)-1))
+                print('Procesing case '+ str(i+1) + ' of ' + str(len(self.fits_files)-1))
+                print('Images: ' + os.path.basename(self.fits_files[i]) + ' and ' + os.path.basename(self.fits_files[i+1]))
                 # Read the .fits file as a Sunpy MAPS object
                 map_seq = sunpy.map.Map([self.fits_files[i], self.fits_files[i+1]], sequence=True)
                 #checks compatible image sizes
@@ -153,10 +155,12 @@ class SelectImgPoints:
                 carrington_lon = [j.lon.arcsec for j in carrington_points]
                 carrington_lat = [j.lat.arcsec for j in carrington_points]
                 # Save the selected points to a common list including the file basename
-                self.points.append([self.fits_files[2*i].split('/')[-1], carrington_lon, carrington_lat])
+                self.points.append([self.fits_files[i].split('/')[-1], carrington_lon, carrington_lat])
                 plt.close()           
         elif self.diff=='none':
             for fits_file in self.fits_files:
+                print('Procesing case '+ str(self.fits_files.index(fits_file)+1) + ' of ' + str(len(self.fits_files)))
+                print('Image: ' + os.path.basename(fits_file))
                 # Read the .fits file as a Sunpy MAPS object
                 map = sunpy.map.Map(fits_file)
                 # Plot the image
