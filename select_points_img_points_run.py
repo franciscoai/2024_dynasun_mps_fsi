@@ -16,12 +16,11 @@ roi = None # Region of interest in arcsec [top_right_x, top_right_y, bottom_left
 exp_scl = 0.2 # Exponential scaling factor for the image
 #######
 # reads master list
-# ofile with id zero paded to two digits
-output_file = odir + '/selected_points_id' +  str(id_of_events_to_process[0]).zfill(2) + '.csv'
-os.makedirs(os.path.dirname(output_file), exist_ok=True)
-
+os.makedirs(os.path.dirname(odir), exist_ok=True)
 master = pd.read_csv(master_list)
 for id in id_of_events_to_process:
+    # output file with id zero paded to two digits
+    output_file = odir + '/selected_points_id' + str(id).zfill(2) + '.csv'
     # get start and end dates for the event id
     start_date = master[master['id'] == id]['start_date'].values[0]
     end_date = master[master['id'] == id]['end_date'].values[0]
