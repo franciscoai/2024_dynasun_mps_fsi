@@ -44,7 +44,7 @@ for id in id_of_events_to_process:
 print('Files to be processed...')
 [print(f) for f in fits_files]
 # Create an instance of the SelectImgPoints that selects points on the images and saves them to a .csv file
-select_img_points = SelectImgPoints(fits_files, output_file, diff='consecutive_diff',
+select_img_points = SelectImgPoints(fits_files, output_file, diff='consecutive_diff',norm_exp=True,
                                     exp_scl=exp_scl, roi=roi, overwrite=overwrite, color_scl=color_scl)
 # Select points
 select_img_points.select_points()

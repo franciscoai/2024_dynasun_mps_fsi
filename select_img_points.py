@@ -15,7 +15,7 @@ import os
 
 class SelectImgPoints:
     def __init__(self, fits_files, output_file, diff='none', coord_type='heliographic_stonyhurst', roi=None,
-                 overwrite=False, color_scl=None, exp_scl=None): # heliographic_carrington or heliographic_stonyhurst
+                 overwrite=False, color_scl=None, exp_scl=None, norm_exp=True): # heliographic_carrington or heliographic_stonyhurst
         '''
         Parameters
         ----------
@@ -37,7 +37,9 @@ class SelectImgPoints:
         color_scl : int, optional
             Number of sigmas to control image color scale range, by default None
         exp_scl : float, optional
-            Exponential scaling factor for the image, by default None        
+            Exponential scaling factor for the image, by default None    
+        norm_exp : bool, optional
+            If True, the image is normalized with the exposure time included in its fits header (xposure)   
         '''
         self.fits_files = fits_files
         self.output_file = output_file
@@ -48,6 +50,7 @@ class SelectImgPoints:
         self.overwrite = overwrite
         self.color_scl = color_scl
         self.exp_scl = exp_scl
+        self.norm_exp = norm_exp
         # create odirectory if it does not exist
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
         if os.path.isfile(self.output_file) and not self.overwrite:
@@ -78,6 +81,10 @@ class SelectImgPoints:
                     map_seq_0_scl = sunpy.map.Map(map_seq[0].data**self.exp_scl, map_seq[0].meta)
                     map_seq_1_scl = sunpy.map.Map(map_seq[1].data**self.exp_scl, map_seq[1].meta)
                     map_seq = sunpy.map.Map([map_seq_0_scl,map_seq_1_scl], sequence=True)
+                if self.norm_exp:
+                    map_seq_0_scl = sunpy.map.Map(map_seq[0].data/map_seq[0].exposure_time.value, map_seq[0].meta)
+                    map_seq_1_scl = sunpy.map.Map(map_seq[1].data/map_seq[1].exposure_time.value, map_seq[1].meta)
+                    map_seq = sunpy.map.Map([map_seq_0_scl,map_seq_1_scl], sequence=True)                    
                 # uses the name of the two files to name the plot
                 title = self.fits_files[2*i+1].split('/')[-1]  + ' - ' +  self.fits_files[2*i].split('/')[-1] 
                 map = sunpy.map.Map(map_seq[1].quantity - map_seq[0].quantity, map_seq[0].meta)
@@ -129,8 +136,12 @@ class SelectImgPoints:
                     map_seq_0_scl = sunpy.map.Map(map_seq[0].data**self.exp_scl, map_seq[0].meta)
                     map_seq_1_scl = sunpy.map.Map(map_seq[1].data**self.exp_scl, map_seq[1].meta)
                     map_seq = sunpy.map.Map([map_seq_0_scl,map_seq_1_scl], sequence=True)
+                if self.norm_exp:
+                    map_seq_0_scl = sunpy.map.Map(map_seq[0].data/map_seq[0].exposure_time.value, map_seq[0].meta)
+                    map_seq_1_scl = sunpy.map.Map(map_seq[1].data/map_seq[1].exposure_time.value, map_seq[1].meta)
+                    map_seq = sunpy.map.Map([map_seq_0_scl,map_seq_1_scl], sequence=True)             
                 # uses the name of the two files to name the plot
-                title = self.fits_files[i].split('/')[-1]  + ' - ' +  self.fits_files[i+1].split('/')[-1] 
+                title = self.fits_files[i+1].split('/')[-1]  + ' - ' +  self.fits_files[i].split('/')[-1] 
                 map = sunpy.map.Map(map_seq[1].quantity - map_seq[0].quantity, map_seq[0].meta)
                 # if roi is specified, plot only that portion of the map
                 if self.roi is not None:
@@ -167,6 +178,9 @@ class SelectImgPoints:
                 if self.exp_scl is not None:
                     map = map.data**self.exp_scl
                     map = sunpy.map.Map(map, map.meta)
+                if self.norm_exp:
+                    map = map.data/map.exposure_time.value
+                    map = sunpy.map.Map(map, map.meta)                    
                 map.plot()
                 # Allow the user to click on the image to select points
                 points = plt.ginput(n=-1, timeout=0)
