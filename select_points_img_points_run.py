@@ -10,11 +10,13 @@ data_path = '/gehme/data/solo/fsi'
 master_list = repo_path + '/FSI_CMEbubbles_Onlytraceable.csv'
 id_of_events_to_process = [22]
 odir = repo_path + '/output'
-overwrite = True # if True, the output file will be overwritten if it already exists
+overwrite = False # if True, the output file will be overwritten if it already exists
 color_scl = 3 # number of sigmas to control image color scale range
 roi = None # Region of interest in arcsec [top_right_x, top_right_y, bottom_left_x, bottom_left_y]
 exp_scl = 0.2 # Exponential scaling factor for the image
+files_names_to_avoid = ['fsi304'] # any filename containing any of these strings will be avoided
 #######
+
 # reads master list
 os.makedirs(os.path.dirname(odir), exist_ok=True)
 master = pd.read_csv(master_list)
@@ -34,11 +36,12 @@ for id in id_of_events_to_process:
     for root, dirs, files in os.walk(data_path):
         for file in files:
             if file.endswith('.fits'):
-                file_date = pd.to_datetime(file.split('_')[-2][0:15])
+                file_date = pd.to_datetime(file.split('_')[-2][0:13])
                 if file_date >= start_date and file_date <= end_date:
                     fits_files.append(os.path.join(root, file))
-                    fits_files_dates.append(file_date)
-    
+                    fits_files_dates.append(file_date)               
+    # remove files that contain any of the strings in files_names_to_avoid
+    fits_files = [f for f in fits_files if not any([name in f for name in files_names_to_avoid])]
     #sort files by file_date
     fits_files = [x for _, x in sorted(zip(fits_files_dates, fits_files))]
 print('Files to be processed...')

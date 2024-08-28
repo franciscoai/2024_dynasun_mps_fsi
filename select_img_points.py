@@ -113,7 +113,7 @@ class SelectImgPoints:
                 carrington_lon = [j.lon.arcsec for j in carrington_points]
                 carrington_lat = [j.lat.arcsec for j in carrington_points]
                 # Save the selected points to a common list including the file basename
-                self.points.append([self.fits_files[2*i].split('/')[-1], carrington_lon, carrington_lat])
+                self.points.append([self.fits_files[2*i+1].split('/')[-1], carrington_lon, carrington_lat])
                 plt.close()
         elif self.diff=='consecutive_diff':
         # if diff, then substract two consecutive files and computes the difference before plotting and selecting points
@@ -170,7 +170,7 @@ class SelectImgPoints:
                 carrington_lon = [j.lon.arcsec for j in carrington_points]
                 carrington_lat = [j.lat.arcsec for j in carrington_points]
                 # Save the selected points to a common list including the file basename
-                self.points.append([self.fits_files[i].split('/')[-1], carrington_lon, carrington_lat])
+                self.points.append([self.fits_files[i+1].split('/')[-1], carrington_lon, carrington_lat])
                 plt.close()           
         elif self.diff=='none':
             for fits_file in self.fits_files:
