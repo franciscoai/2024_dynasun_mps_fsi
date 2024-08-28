@@ -74,7 +74,7 @@ for points_list in points_lists:
     fig = plt.figure()
     plt.plot(points['date'], h,'o--k')
     plt.xticks(rotation=45)
-    plt.ylabel('Height [arcsec]')
+    plt.ylabel('Height [Rs]')
     plt.xlabel('Date')
     plt.title('Height vs Date')
     plt.tight_layout()
