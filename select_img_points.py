@@ -113,7 +113,7 @@ class SelectImgPoints:
                 carrington_lon = [j.lon.arcsec for j in carrington_points]
                 carrington_lat = [j.lat.arcsec for j in carrington_points]
                 # Save the selected points to a common list including the file basename
-                self.points.append([self.fits_files[2*i+1].split('/')[-1], carrington_lon, carrington_lat, map.rsun_obs.value])
+                self.points.append([self.fits_files[2*i+1].split('/')[-1], carrington_lon, carrington_lat, map.dsun.value])
                 plt.close()
         elif self.diff=='consecutive_diff':
         # if diff, then substract two consecutive files and computes the difference before plotting and selecting points
@@ -170,7 +170,7 @@ class SelectImgPoints:
                 carrington_lon = [j.lon.arcsec for j in carrington_points]
                 carrington_lat = [j.lat.arcsec for j in carrington_points]
                 # Save the selected points to a common list including the file basename
-                self.points.append([self.fits_files[i+1].split('/')[-1], carrington_lon, carrington_lat, map.rsun_obs.value])
+                self.points.append([self.fits_files[i+1].split('/')[-1], carrington_lon, carrington_lat, map.dsun.value])
                 plt.close()           
         elif self.diff=='none':
             for fits_file in self.fits_files:
@@ -197,11 +197,11 @@ class SelectImgPoints:
                 carrington_lon = [i.lon.arcsec for i in carrington_points]
                 carrington_lat = [i.lat.arcsec for i in carrington_points]
                 # Save the selected points to a common list including the file basename
-                self.points.append([fits_file.split('/')[-1], carrington_lon, carrington_lat, map.rsun_obs.value])
+                self.points.append([fits_file.split('/')[-1], carrington_lon, carrington_lat, map.dsun.value])
                 plt.close()             
         else:
             print('Error: diff parameter must be either "diff", "consecutive_diff" or "none"')
             os._exit(0)
         # Save the selected points to a .csv file               
-        df = pd.DataFrame(self.points, columns=['file', 'lon [arcsec]', 'lat [arcsec]', 'rsun_obs [m]'])
+        df = pd.DataFrame(self.points, columns=['file', 'lon [arcsec]', 'lat [arcsec]', 'dsun [m]'])
         df.to_csv(self.output_file, index=False)            

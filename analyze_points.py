@@ -35,8 +35,8 @@ for points_list in points_lists:
     # get lat and lon
     lat = points['lat [arcsec]'].values
     lon = points['lon [arcsec]'].values
-    # get distance to the sun in [m] from rsun_obs column
-    rsun_obs = points['rsun_obs'].values
+    # get distance to the sun in [m] from dsun column
+    dsun = points['dsun'].values
     h=[]
     aw=[]
     for i in range(0,len(lat)):
@@ -54,7 +54,7 @@ for points_list in points_lists:
         # computes the angular width between the first and third point
         aw.append(np.abs(all_phi[0]-all_phi[2])*180/np.pi)
         # converts all_r[1] from arcsec to solar radii
-        h_rsun = np.deg2rad(all_r[1]/3600)*rsun_obs[i]/solar_rad_in_m
+        h_rsun = np.deg2rad(all_r[1]/3600)*dsun[i]/solar_rad_in_m
         h.append(h_rsun)
 
     print('Plotting...')
