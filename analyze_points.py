@@ -12,6 +12,7 @@ mpl.use('Agg')
 repo_path = os.getcwd()
 points_list_path = repo_path + '/output' # it process all csv files in this directory
 output_dir = repo_path + '/output/plots' # output directory for plots
+solar_rad_in_m = 6.957e8 # solar radius in meters
 #####
 # finds al csv files in points_list_path
 points_lists = [f for f in os.listdir(points_list_path) if f.endswith('.csv')]
@@ -34,6 +35,8 @@ for points_list in points_lists:
     # get lat and lon
     lat = points['lat [arcsec]'].values
     lon = points['lon [arcsec]'].values
+    # get distance to the sun in [m] from rsun_obs column
+    rsun_obs = points['rsun_obs'].values
     h=[]
     aw=[]
     for i in range(0,len(lat)):
@@ -50,8 +53,9 @@ for points_list in points_lists:
         all_r = np.sqrt(all_lat**2 + all_lon**2)
         # computes the angular width between the first and third point
         aw.append(np.abs(all_phi[0]-all_phi[2])*180/np.pi)
-        # computes the gometric distance of the center point
-        h.append(all_r[1])
+        # converts all_r[1] from arcsec to solar radii
+        h_rsun = np.deg2rad(all_r[1]/3600)*rsun_obs[i]/solar_rad_in_m
+        h.append(h_rsun)
 
     print('Plotting...')
     # plot aw vs date to png file
