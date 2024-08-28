@@ -29,6 +29,8 @@ for id in id_of_events_to_process:
     #convert dates that are in format YYYY-MM-DD HH:mm to timestamp
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
+    # adds 59 seconds to the end date to include the last minute
+    end_date = end_date + pd.Timedelta(seconds=59)
     # search in data_path for files that are within the start and end dates
     # file structure in data_path is data_path/YYYY/MM/DD/solo_L2_eui-fsi304-image_YYYYMMDDTHHmmSSSSS_V01.fits*
     fits_files = []
@@ -36,14 +38,19 @@ for id in id_of_events_to_process:
     for root, dirs, files in os.walk(data_path):
         for file in files:
             if file.endswith('.fits'):
-                file_date = pd.to_datetime(file.split('_')[-2][0:13])
+                file_date = pd.to_datetime(file.split('_')[-2][0:15])
                 if file_date >= start_date and file_date <= end_date:
                     fits_files.append(os.path.join(root, file))
                     fits_files_dates.append(file_date)               
     # remove files that contain any of the strings in files_names_to_avoid
-    fits_files = [f for f in fits_files if not any([name in f for name in files_names_to_avoid])]
-    #sort files by file_date
-    fits_files = [x for _, x in sorted(zip(fits_files_dates, fits_files))]
+    ind_to_keep = np.ones(len(fits_files), dtype=bool)
+    for f in files_names_to_avoid:
+        ind_to_keep = ind_to_keep & ~np.array([f in file for file in fits_files])
+    fits_files = [fits_files[i] for i in np.where(ind_to_keep)[0]]
+    fits_files_dates = [fits_files_dates[i] for i in np.where(ind_to_keep)[0]]
+    #sort files by timestamp
+    ind = np.argsort(fits_files_dates)
+    fits_files = [fits_files[i] for i in ind]
 print('Files to be processed...')
 [print(f) for f in fits_files]
 # Create an instance of the SelectImgPoints that selects points on the images and saves them to a .csv file
