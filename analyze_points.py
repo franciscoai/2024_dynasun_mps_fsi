@@ -16,7 +16,7 @@ solar_rad_in_m = 6.957e8 # solar radius in meters
 #####
 # finds al csv files in points_list_path
 points_lists = [f for f in os.listdir(points_list_path) if f.endswith('.csv')]
-points_lists = [os.path.join(points_list_path, f) for f in points_lists]
+points_lists = sorted([os.path.join(points_list_path, f) for f in points_lists])
 # variables to plot together for all csv files
 all_mean_dawdh = []  
 all_mean_spped = []
@@ -134,7 +134,7 @@ for points_list in points_lists:
 # plot all mean dawdh vs event_id
 fig = plt.figure()
 all_mean_dawdh = np.array(all_mean_dawdh)
-plt.plot(all_mean_dawdh[:,0], all_mean_dawdh[:,1],'o--k')
+plt.plot(all_mean_dawdh[:,0], all_mean_dawdh[:,1].astype(float),'o--k')
 plt.xticks(rotation=45)
 plt.ylabel('Mean d(aw)/dh [deg/Rs]')
 plt.xlabel('Event ID')
@@ -147,7 +147,7 @@ plt.close()
 # plot all mean speed vs event_id
 fig = plt.figure()
 all_mean_spped = np.array(all_mean_spped)   
-plt.plot(all_mean_spped[:,0], all_mean_spped[:,1],'o--k')
+plt.plot(all_mean_spped[:,0], all_mean_spped[:,1].astype(float),'o--k')
 plt.xticks(rotation=45)
 plt.ylabel('Mean Speed [km/s]')
 plt.xlabel('Event ID')
