@@ -36,7 +36,7 @@ for points_list in points_lists:
     lat = points['lat [arcsec]'].values
     lon = points['lon [arcsec]'].values
     # get distance to the sun in [m] from dsun column
-    dsun = points['dsun'].values
+    dsun = points['dsun [m]'].values
     h=[]
     aw=[]
     for i in range(0,len(lat)):
