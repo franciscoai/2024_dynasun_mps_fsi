@@ -55,7 +55,11 @@ for points_list in points_lists:
         all_phi = np.arctan2(all_lat, all_lon)
         all_r = np.sqrt(all_lat**2 + all_lon**2)
         # computes the angular width between the first and third point
-        aw.append(np.abs(all_phi[0]-all_phi[2])*180/np.pi)
+        # checks if the points are in the same quadrant
+        if all_phi[0]*all_phi[2] > 0:
+            aw.append(np.abs(all_phi[0]-all_phi[2])*180/np.pi)
+        else:
+            aw.append(np.abs(all_phi[0]+all_phi[2])*180/np.pi)
         # converts all_r[1] from arcsec to solar radii
         h_rsun = np.deg2rad(all_r[1]/3600)*dsun[i]/solar_rad_in_m
         h.append(h_rsun)
