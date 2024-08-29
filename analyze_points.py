@@ -17,6 +17,9 @@ solar_rad_in_m = 6.957e8 # solar radius in meters
 # finds al csv files in points_list_path
 points_lists = [f for f in os.listdir(points_list_path) if f.endswith('.csv')]
 points_lists = [os.path.join(points_list_path, f) for f in points_lists]
+# variables to plot together for all csv files
+all_mean_dawdh = []  
+all_mean_spped = []
 # process each csv file
 for points_list in points_lists:
     print('Computing derived quantities for file: ' + os.path.basename(points_list))
@@ -81,5 +84,78 @@ for points_list in points_lists:
     plt.grid()
     plt.savefig(curr_output_dir + '/h_vs_date.png')
     plt.close()
+
+    # plot velocity in km/s vs date to png file
+    fig = plt.figure()
+    h_km = np.array(h)*solar_rad_in_m/1e3
+    date_diff_sec = np.diff(points['date']).astype('timedelta64[s]').astype(int)
+    speed = np.diff(h_km)/date_diff_sec
+    event_id = str.split(os.path.basename(curr_output_dir),'_')[-1]
+    all_mean_spped.append([event_id, np.mean(speed)])
+    plt.plot(points['date'][1:], speed,'o--k')
+    plt.xticks(rotation=45)
+    plt.ylabel('Speed [km/s]')
+    plt.xlabel('Date')
+    plt.title('Speed vs Date')
+    plt.tight_layout()
+    plt.grid()
+    plt.savefig(curr_output_dir + '/speed_vs_date.png')
+
+    # plot aw vs h to png file
+    fig = plt.figure()
+    plt.plot(h, aw,'o--k')
+    plt.ylabel('Angular width [deg]')
+    plt.xlabel('Height [Rs]')
+    plt.title('Angular width vs Height')
+    plt.tight_layout()
+    plt.grid()
+    plt.savefig(curr_output_dir + '/aw_vs_h.png')
+    plt.close()
+
+    # plot derivative of aw wrt h vs h
+    fig = plt.figure()
+    dawdh = np.diff(aw)/np.diff(h)
+    event_id = str.split(os.path.basename(curr_output_dir),'_')[-1]
+    all_mean_dawdh.append([event_id, np.mean(dawdh)])
+    plt.plot(h[1:], dawdh,'o--k')
+    plt.ylabel('d(aw)/dh [deg/Rs]')
+    plt.xlabel('Height [Rs]')
+    plt.title('d(aw)/dh vs Height')
+    plt.tight_layout()
+    plt.grid()
+    plt.savefig(curr_output_dir + '/dawdh_vs_h.png')
+    plt.close()
+
+# common plots
+# plot all mean dawdh vs event_id
+fig = plt.figure()
+all_mean_dawdh = np.array(all_mean_dawdh)
+plt.plot(all_mean_dawdh[:,0], all_mean_dawdh[:,1],'o--k')
+plt.xticks(rotation=45)
+plt.ylabel('Mean d(aw)/dh [deg/Rs]')
+plt.xlabel('Event ID')
+plt.title('Mean d(aw)/dh vs Event ID')
+plt.tight_layout()
+plt.grid()
+plt.savefig(output_dir + '/mean_dawdh_vs_event_id.png')
+plt.close()
+
+# plot all mean speed vs event_id
+fig = plt.figure()
+all_mean_spped = np.array(all_mean_spped)   
+plt.plot(all_mean_spped[:,0], all_mean_spped[:,1],'o--k')
+plt.xticks(rotation=45)
+plt.ylabel('Mean Speed [km/s]')
+plt.xlabel('Event ID')
+plt.title('Mean Speed vs Event ID')
+plt.tight_layout()
+plt.grid()
+plt.savefig(output_dir + '/mean_speed_vs_event_id.png')
+plt.close()
+
+
+
+
+
 
 
