@@ -8,13 +8,13 @@ import numpy as np
 repo_path = os.getcwd() 
 data_path = '/gehme/data/solo/fsi'
 master_list = repo_path + '/FSI_CMEbubbles_Onlytraceable.csv'
-id_of_events_to_process = [6]
+id_of_events_to_process = [13]
 odir = repo_path + '/output'
 overwrite = True # if True, the output file will be overwritten if it already exists
 color_scl = 2 # number of sigmas to control image color scale range
-roi = None # Region of interest in arcsec [top_right_x, top_right_y, bottom_left_x, bottom_left_y]
+roi = [4500,4500,-4500,-4500] #None or Region of interest in arcsec [top_right_x, top_right_y, bottom_left_x, bottom_left_y]
 exp_scl = 0.2 # Exponential scaling factor for the image
-files_names_to_avoid = ['fsi304'] # any filename containing any of these strings will be avoided
+files_names_to_avoid = ['fsi304','v02'] # any filename containing any of these strings will be avoided
 min_time_delta = 60.*9. # minimum time delta between consecutive images in seconds.
 #######
 
