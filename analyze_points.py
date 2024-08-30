@@ -13,6 +13,7 @@ repo_path = os.getcwd()
 points_list_path = repo_path + '/output' # it process all csv files in this directory
 output_dir = repo_path + '/output/plots' # output directory for plots
 solar_rad_in_m = 6.957e8 # solar radius in meters
+fig_size = (10, 9) # figure size
 #####
 # finds al csv files in points_list_path
 points_lists = [f for f in os.listdir(points_list_path) if f.endswith('.csv')]
@@ -79,7 +80,7 @@ for points_list in points_lists:
     
     print('Plotting...')
     # plot aw vs date to png file
-    fig = plt.figure()
+    fig = plt.figure(figsize=fig_size)
     plt.plot(points['date'], aw,'o--k')
     plt.xticks(rotation=45)
     plt.ylabel('Angular width [deg]')
@@ -91,7 +92,7 @@ for points_list in points_lists:
     plt.close()
 
     # plot h vs date to png file
-    fig = plt.figure()
+    fig = plt.figure(figsize=fig_size)
     plt.plot(points['date'], h,'o--k')
     plt.xticks(rotation=45)
     plt.ylabel('Height [Rs]')
@@ -103,7 +104,7 @@ for points_list in points_lists:
     plt.close()
 
     # plot velocity in km/s vs date to png file
-    fig = plt.figure()
+    fig = plt.figure(figsize=fig_size)
     h_km = np.array(h)*solar_rad_in_m/1e3
     date_diff_sec = np.diff(points['date']).astype('timedelta64[s]').astype(int)
     speed = np.diff(h_km)/date_diff_sec
@@ -118,7 +119,7 @@ for points_list in points_lists:
     plt.savefig(curr_output_dir + '/speed_vs_date.png')
 
     # plot aw vs h to png file
-    fig = plt.figure()
+    fig = plt.figure(figsize=fig_size)
     plt.plot(h, aw,'o--k')
     # fit and plot a line
     m, b = np.polyfit(h, aw, 1)
@@ -134,7 +135,7 @@ for points_list in points_lists:
     plt.close()
 
     # plot derivative of aw wrt h vs h
-    fig = plt.figure()
+    fig = plt.figure(figsize=fig_size)
     dawdh = np.diff(aw)/np.diff(h)
     all_mean_dawdh.append([event_id, np.mean(dawdh)])
     plt.plot(h[1:], dawdh,'o--k')
@@ -150,7 +151,7 @@ for points_list in points_lists:
 
 #common plots
 # plot all mean speed vs event_id
-fig = plt.figure()
+fig = plt.figure(figsize=fig_size)
 all_mean_spped = np.array(all_mean_spped)   
 plt.plot(all_mean_spped[:,0], all_mean_spped[:,1].astype(float),'o--k')
 plt.xticks(rotation=45)
@@ -163,7 +164,7 @@ plt.savefig(output_dir + '/mean_speed_vs_event_id.png')
 plt.close()
 
 # plot all mean aw vs event_id
-fig = plt.figure()
+fig = plt.figure(figsize=fig_size)
 all_mean_aw = np.array(all_mean_aw)
 plt.plot(all_mean_aw[:,0], all_mean_aw[:,1].astype(float),'o--k')
 plt.xticks(rotation=45)
@@ -176,7 +177,7 @@ plt.savefig(output_dir + '/mean_aw_vs_event_id.png')
 plt.close()
 
 #plot all all_aw_fit_par vs event_id
-fig = plt.figure()
+fig = plt.figure(figsize=fig_size)
 all_aw_fit_par = np.array(all_aw_fit_par)
 plt.plot(all_aw_fit_par[:,0], all_aw_fit_par[:,1].astype(float),'o--k',label='m')
 plt.plot(all_aw_fit_par[:,0], all_aw_fit_par[:,2].astype(float),'o--r',label='b')
@@ -191,52 +192,51 @@ plt.savefig(output_dir + '/fit_par_vs_event_id.png')
 plt.close()
 
 # scatter plot of all_aw_fit_par[:,1] vs all_aw_fit_par[:,2]
-fig = plt.figure()
-plt.scatter(all_aw_fit_par[:,1].astype(float), all_aw_fit_par[:,2].astype(float))
-m, b = np.polyfit(all_aw_fit_par[:,1].astype(float), all_aw_fit_par[:,2].astype(float), 1)
-plt.plot(all_aw_fit_par[:,1].astype(float), m*all_aw_fit_par[:,1].astype(float) + b, 'r',label='y = ' + str(round(m,2)) + 'x + ' + str(round(b,2)))
-plt.ylabel('b')
-plt.xlabel('m')
-plt.title('b vs m')
-plt.tight_layout()
-plt.grid()
-plt.legend()
-plt.savefig(output_dir + '/b_vs_m.png')
-plt.close()
+all_ho=[0,1.25, 2.37, 3]
+for ho in all_ho:
+    fig = plt.figure(figsize=fig_size)
+    aw_at_1rs = all_aw_fit_par[:,1].astype(float)*ho + all_aw_fit_par[:,2].astype(float)
+    plt.scatter(all_aw_fit_par[:,1].astype(float), aw_at_1rs)
+    # fits a line
+    m, b = np.polyfit(all_aw_fit_par[:,1].astype(float), aw_at_1rs, 1)
+    plt.plot(all_aw_fit_par[:,1].astype(float), m*all_aw_fit_par[:,1].astype(float) + b, 'r',label='y = ' + str(round(m,2)) + 'x + ' + str(round(b,2))) 
+    # ho in ther labels with decimal 2 digits
+    plt.ylabel('aw at h0=%s Rs [deg]' % str(round(ho,2)))
+    plt.xlabel('mean daw/dh [deg/Rs]')
+    plt.tight_layout()
+    plt.legend()
+    plt.grid()
+    plt.savefig(output_dir + '/aw_at_%s_vs_dawdh.png' % str(round(ho,2)))
+    plt.close()
 
-# scatter plot of all_aw_fit_par[:,1] vs all_aw_fit_par[:,2]
-fig = plt.figure()
-ho=np.abs(m)+1
-aw_at_1rs = all_aw_fit_par[:,1].astype(float)*ho + all_aw_fit_par[:,2].astype(float)
-plt.scatter(all_aw_fit_par[:,1].astype(float), aw_at_1rs)
-# fits a line
-m, b = np.polyfit(all_aw_fit_par[:,1].astype(float), aw_at_1rs, 1)
-plt.plot(all_aw_fit_par[:,1].astype(float), m*all_aw_fit_par[:,1].astype(float) + b, 'r',label='y = ' + str(round(m,2)) + 'x + ' + str(round(b,2))) 
-# ho in ther labels with decimal 2 digits
-plt.ylabel('aw at h0=%s Rs [deg]' % str(round(ho,2)))
-plt.xlabel('mean daw/dh [deg/Rs]')
+# all_aw_and_h i a sinlge plot
+fig = plt.figure(figsize=fig_size)
+for i in range(0,len(all_aw_and_h)):
+    plt.plot(all_aw_and_h[i][1], all_aw_and_h[i][2],'--o',label=all_aw_and_h[i][0])
+plt.ylabel('Angular width [deg]')
+plt.xlabel('Height [Rs]')
+plt.title('Angular width vs Height')
+# add a small legend with small text at the bottom of the plot
+# use only two rows for the legend
+plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), shadow=True, fontsize='small', ncols=len(all_aw_and_h)//3)
 plt.tight_layout()
-plt.legend()
 plt.grid()
-plt.savefig(output_dir + '/aw_at_%s_vs_dawdh.png' % str(round(ho,2)))
+plt.savefig(output_dir + '/all_aw_vs_h.png')
 plt.close()
 
 # all_aw_and_h i a sinlge plot
-fig = plt.figure()
+fig = plt.figure(figsize=fig_size)
 for i in range(0,len(all_aw_and_h)):
     plt.plot(all_aw_and_h[i][1], all_aw_and_h[i][2],'o',label=all_aw_and_h[i][0])
 plt.ylabel('Angular width [deg]')
 plt.xlabel('Height [Rs]')
-plt.title('Angular width vs Height')
-plt.legend()
+# add small legend at the bottom of the plot
+plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), shadow=True, fontsize='small', ncols=len(all_aw_and_h)//3)
 h=np.linspace(0.5,2.4,10)
 for i in range(0,len(all_aw_and_h)):
     m = all_aw_fit_par[i][1].astype(float)
     b = all_aw_fit_par[i][2].astype(float)
     plt.plot(h, m*h+ b, label=all_aw_and_h[i][0],linewidth=0.5)
-plt.ylabel('Angular width [deg]')
-plt.xlabel('Height [Rs]')
-plt.title('Angular width vs Height')
 plt.tight_layout()
 plt.grid()
 plt.savefig(output_dir + '/all_aw_vs_h_fit_lines.png')
