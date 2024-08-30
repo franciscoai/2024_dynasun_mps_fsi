@@ -22,6 +22,7 @@ all_mean_dawdh = []
 all_mean_spped = []
 all_mean_aw = []
 all_aw_fit_par = []
+all_aw_and_h = []
 # process each csv file
 for points_list in points_lists:
     print('Computing derived quantities for file: ' + os.path.basename(points_list))
@@ -145,20 +146,9 @@ for points_list in points_lists:
     plt.savefig(curr_output_dir + '/dawdh_vs_h.png')
     plt.close()
 
-# common plots
-# # plot all mean dawdh vs event_id
-# fig = plt.figure()
-# all_mean_dawdh = np.array(all_mean_dawdh)
-# plt.plot(all_mean_dawdh[:,0], all_mean_dawdh[:,1].astype(float),'o--k')
-# plt.xticks(rotation=45)
-# plt.ylabel('Mean d(aw)/dh [deg/Rs]')
-# plt.xlabel('Event ID')
-# plt.title('Mean d(aw)/dh vs Event ID')
-# plt.tight_layout()
-# plt.grid()
-# plt.savefig(output_dir + '/mean_dawdh_vs_event_id.png')
-# plt.close()
+    all_aw_and_h.append([event_id, h, aw])
 
+#common plots
 # plot all mean speed vs event_id
 fig = plt.figure()
 all_mean_spped = np.array(all_mean_spped)   
@@ -203,42 +193,54 @@ plt.close()
 # scatter plot of all_aw_fit_par[:,1] vs all_aw_fit_par[:,2]
 fig = plt.figure()
 plt.scatter(all_aw_fit_par[:,1].astype(float), all_aw_fit_par[:,2].astype(float))
+m, b = np.polyfit(all_aw_fit_par[:,1].astype(float), all_aw_fit_par[:,2].astype(float), 1)
+plt.plot(all_aw_fit_par[:,1].astype(float), m*all_aw_fit_par[:,1].astype(float) + b, 'r',label='y = ' + str(round(m,2)) + 'x + ' + str(round(b,2)))
 plt.ylabel('b')
 plt.xlabel('m')
 plt.title('b vs m')
 plt.tight_layout()
 plt.grid()
+plt.legend()
 plt.savefig(output_dir + '/b_vs_m.png')
 plt.close()
 
 # scatter plot of all_aw_fit_par[:,1] vs all_aw_fit_par[:,2]
 fig = plt.figure()
-# computes the fit value at h=1
-aw_at_1rs = all_aw_fit_par[:,1].astype(float) + all_aw_fit_par[:,2].astype(float)
+ho=np.abs(m)+1
+aw_at_1rs = all_aw_fit_par[:,1].astype(float)*ho + all_aw_fit_par[:,2].astype(float)
 plt.scatter(all_aw_fit_par[:,1].astype(float), aw_at_1rs)
-plt.ylabel('aw at 1 Rs [deg]')
+# fits a line
+m, b = np.polyfit(all_aw_fit_par[:,1].astype(float), aw_at_1rs, 1)
+plt.plot(all_aw_fit_par[:,1].astype(float), m*all_aw_fit_par[:,1].astype(float) + b, 'r',label='y = ' + str(round(m,2)) + 'x + ' + str(round(b,2))) 
+# ho in ther labels with decimal 2 digits
+plt.ylabel('aw at h0=%s Rs [deg]' % str(round(ho,2)))
 plt.xlabel('mean daw/dh [deg/Rs]')
 plt.tight_layout()
+plt.legend()
 plt.grid()
-plt.savefig(output_dir + '/aw_at_1rs_vs_dawdh.png')
+plt.savefig(output_dir + '/aw_at_%s_vs_dawdh.png' % str(round(ho,2)))
 plt.close()
-print('Done!')
 
-# scatter plot of all_aw_fit_par[:,1] vs all_aw_fit_par[:,2]
+# all_aw_and_h i a sinlge plot
 fig = plt.figure()
-# computes the fit value at h=1
-aw_at_1rs = all_aw_fit_par[:,1].astype(float)*1.25 + all_aw_fit_par[:,2].astype(float)
-plt.scatter(all_aw_fit_par[:,1].astype(float), aw_at_1rs)
-# fit a 
-plt.ylabel('aw at 1.25 Rs [deg]')
-plt.xlabel('mean daw/dh [deg/Rs]')
+for i in range(0,len(all_aw_and_h)):
+    plt.plot(all_aw_and_h[i][1], all_aw_and_h[i][2],'o',label=all_aw_and_h[i][0])
+plt.ylabel('Angular width [deg]')
+plt.xlabel('Height [Rs]')
+plt.title('Angular width vs Height')
+plt.legend()
+h=np.linspace(0.5,2.4,10)
+for i in range(0,len(all_aw_and_h)):
+    m = all_aw_fit_par[i][1].astype(float)
+    b = all_aw_fit_par[i][2].astype(float)
+    plt.plot(h, m*h+ b, label=all_aw_and_h[i][0],linewidth=0.5)
+plt.ylabel('Angular width [deg]')
+plt.xlabel('Height [Rs]')
+plt.title('Angular width vs Height')
 plt.tight_layout()
 plt.grid()
-plt.savefig(output_dir + '/aw_at_1.25rs_vs_dawdh.png')
+plt.savefig(output_dir + '/all_aw_vs_h_fit_lines.png')
 plt.close()
-print('Done!')
-
-
 
 
 
