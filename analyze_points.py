@@ -190,7 +190,14 @@ plt.grid()
 plt.legend()
 plt.savefig(output_dir + '/fit_par_vs_event_id.png')
 plt.close()
-
+#######
+# Given a group of linear eqs: aw = m_i * h + b_i, that share a common point (h0, aw0), then the
+# relationship between all m_i and any given point (h, aw) is linear:
+#   aw0 = m_i * h0 + b_i => b_i = aw0 - m_i * h0,
+#   aw = m_i * h + aw0 - m_i * h0
+#   aw = m_i * (h - h0) + aw0
+# Wich is a line in aw vs m_i space with slope h - h0 and intercept aw0
+######
 # scatter plot of all_aw_fit_par[:,1] vs all_aw_fit_par[:,2]
 all_ho=[0,1.25, 2.37, 3]
 for ho in all_ho:
