@@ -4,6 +4,12 @@
 # 3- Converts the selected pixel values to Carrington coordinates using the WCS information in the .fits file and Sunpy built in functions
 # 4- Saves the selected points to a .csv file
 
+
+#16/12/2024     Modify values in carrington_lon, lat, and r_run to float values
+#               Modify the selection of the header in the differences images, to take the header of the first image
+#17/12/2024     Add sliders to b_min and b_max (Be careful that it marks points on the sliders)
+#18/12/2024     Correct the marks on sliders
+
 import sunpy.map
 import numpy as np
 import pandas as pd
@@ -12,6 +18,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 import matplotlib.colors as colors
 import os
+from matplotlib.widgets import Slider
 
 class SelectImgPoints:
     def __init__(self, fits_files, output_file, diff='none', coord_type='heliographic_stonyhurst', roi=None,
@@ -89,7 +96,7 @@ class SelectImgPoints:
                     map_seq = sunpy.map.Map([map_seq_0_scl,map_seq_1_scl], sequence=True)                 
                 # uses the name of the two files to name the plot
                 title = self.fits_files[2*i+1].split('/')[-1]  + ' - ' +  self.fits_files[2*i].split('/')[-1] 
-                map = sunpy.map.Map(map_seq[1].quantity - map_seq[0].quantity, map_seq[0].meta)
+                map = sunpy.map.Map(map_seq[1].quantity - map_seq[0].quantity, map_seq[1].meta)
                 # if roi is specified, plot only that portion of the map
                 if self.roi is not None:
                     top_right = SkyCoord(self.roi[0]*u.arcsec, self.roi[1]*u.arcsec, frame=map.coordinate_frame)
@@ -104,6 +111,7 @@ class SelectImgPoints:
                     scl = self.color_scl                 
                 # plots with white as max and black as min
                 map.plot(norm=colors.Normalize(vmin=m-scl*sd, vmax=m+scl*sd), cmap='gray', title=title)
+                ax_image = fig.add_subplot(111, projection=map.wcs)
                 # Allow the user to click on the image to select points
                 points = plt.ginput(n=-1, timeout=0)
                 # Convert the selected pixel values to Carrington coordinates using the WCS information in the .fits file and Sunpy built in functions
@@ -113,7 +121,7 @@ class SelectImgPoints:
                 carrington_lon = [j.lon.arcsec for j in carrington_points]
                 carrington_lat = [j.lat.arcsec for j in carrington_points]
                 # Save the selected points to a common list including the file basename
-                self.points.append([self.fits_files[2*i+1].split('/')[-1], carrington_lon, carrington_lat, map.dsun.value])
+                self.points.append([self.fits_files[2*i+1].split('/')[-1], [float(lon) for lon in carrington_lon], [float(lat) for lat in carrington_lat], float(map.dsun.value)])
                 plt.close()
         elif self.diff=='consecutive_diff':
         # if diff, then substract two consecutive files and computes the difference before plotting and selecting points
@@ -124,6 +132,7 @@ class SelectImgPoints:
                 # Read the .fits file as a Sunpy MAPS object
                 map_seq = sunpy.map.Map([self.fits_files[i], self.fits_files[i+1]], sequence=True)
                 #checks compatible image sizes
+                print(map_seq[0].data.shape)
                 if map_seq[0].data.shape != map_seq[1].data.shape:
                     print(f'Warning: {self.fits_files[i]} and {self.fits_files[i+1]} have different image sizes')
                     # resamples to match the smallest image
@@ -146,32 +155,103 @@ class SelectImgPoints:
                     map_seq = sunpy.map.Map([map_seq_0_scl,map_seq_1_scl], sequence=True)         
                 # uses the name of the two files to name the plot
                 title = self.fits_files[i+1].split('/')[-1]  + ' - ' +  self.fits_files[i].split('/')[-1] 
-                map = sunpy.map.Map(map_seq[1].quantity - map_seq[0].quantity, map_seq[0].meta)
+                map = sunpy.map.Map(map_seq[1].quantity - map_seq[0].quantity, map_seq[1].meta)
+                m = np.mean(map.data)
+                sd = np.std(map.data)
                 # if roi is specified, plot only that portion of the map
                 if self.roi is not None:
                     top_right = SkyCoord(self.roi[0]*u.arcsec, self.roi[1]*u.arcsec, frame=map.coordinate_frame)
                     bottom_left = SkyCoord(self.roi[2]*u.arcsec, self.roi[3]*u.arcsec, frame=map.coordinate_frame)
                     map = map.submap(bottom_left, top_right=top_right)
                     print(f'Warning: ROI box [arcsec] specified. Plotting only the portion of the image within the box {self.roi}')
-                m = np.mean(map.data)
-                sd = np.std(map.data)
+
                 if self.color_scl is None: 
                     scl = 3
                 else:
-                    scl = self.color_scl 
-                # plots with white as max and black as min
-                map.plot(norm=colors.Normalize(vmin=m-scl*sd, vmax=m+scl*sd), cmap='gray', title=title)
-                # Allow the user to click on the image to select points
-                points = plt.ginput(n=-1, timeout=0)
-                # Convert the selected pixel values to Carrington coordinates using the WCS information in the .fits file and Sunpy built in functions
+                    scl = self.color_scl
+
+
+                vmin_init = m - scl * sd
+                vmax_init = m + scl * sd
+
+                # Crear figura y ejes con proyección WCS
+                fig = plt.figure(figsize=(12, 10))
+                ax = fig.add_subplot(111, projection=map.wcs)  # Usamos la proyección WCS del mapa
+                plt.subplots_adjust(bottom=0.25)
+
+                # Mostrar la imagen
+                im = map.plot(norm=plt.Normalize(vmin=vmin_init, vmax=vmax_init), cmap='gray', title=title)#, axes=ax)
+
+                # Slider para brillo mínimo y máximo
+                ax_vmin = plt.axes([0.25, 0.1, 0.65, 0.03])
+                ax_vmax = plt.axes([0.25, 0.05, 0.65, 0.03])
+                slider_vmin = Slider(ax_vmin, 'Brillo min', m - 3 * sd, m + 3 * sd, valinit=vmin_init)
+                slider_vmax = Slider(ax_vmax, 'Brillo max', m - 3 * sd, m + 3 * sd, valinit=vmax_init)
+
+                # Actualizar la imagen según los sliders
+                def update(val):
+                    vmin = slider_vmin.val
+                    vmax = slider_vmax.val
+                    im.set_norm(plt.Normalize(vmin=vmin, vmax=vmax))
+                    fig.canvas.draw_idle()
+                    #return vmin, vmax
+                
+                def get_current_vmin_vmax():
+                    return slider_vmin.val, slider_vmax.val
+                
+                slider_vmin.on_changed(update)
+                slider_vmax.on_changed(update)
+                #vmin, vmax = get_current_vmin_vmax()
+                # Lista para almacenar los puntos seleccionados
+                points = []
+                
+                # Función para manejar los clics del mouse
+                def on_click(event):
+                    vmin, vmax = get_current_vmin_vmax()
+                    print(vmin, vmax)
+                    if event.inaxes == ax:  # Verificar si el clic ocurre en el eje de la imagen
+                        if event.button == 1:  # Botón izquierdo del mouse (agregar punto)
+                            points.append((event.xdata, event.ydata))
+                            ax.plot(event.xdata, event.ydata, 'r+')  # Mostrar el punto en el gráfico
+                        elif event.button == 3:  # Botón derecho del mouse (borrar último punto)
+                            if points:
+                                points.pop()  # Eliminar el último punto
+                                ax.clear()  # Limpiar el eje
+                                im = map.plot(norm=plt.Normalize(vmin=vmin, vmax=vmax), 
+                                              cmap='gray', 
+                                              title=title, 
+                                              axes=ax
+                                              )  # Volver a dibujar la imagen
+                                #ax = fig.add_subplot(111, projection=map.wcs)
+                                ax.plot(*zip(*points), 'r+')  # Redibujar los puntos restantes
+                        fig.canvas.draw()
+                    else:
+                        print("Clic fuera del área de la imagen, ignorado.")
+
+                # Conectar el evento de clic
+                cid = fig.canvas.mpl_connect('button_press_event', on_click)
+
+                # Mostrar la figura y esperar la interacción
+                print("Haz clic en la imagen para seleccionar puntos (cierra la ventana para finalizar).")
+                plt.show()
+
+                # Convertir los valores de píxeles seleccionados a coordenadas Carrington usando WCS
                 wcs = map.wcs
-                wcs_points= [wcs.pixel_to_world(j[0], j[1]) for j in points]
+                wcs_points = [wcs.pixel_to_world(j[0], j[1]) for j in points]
                 carrington_points = [SkyCoord(j.Tx, j.Ty, frame=self.coord_type, obstime=map.date) for j in wcs_points]
                 carrington_lon = [j.lon.arcsec for j in carrington_points]
                 carrington_lat = [j.lat.arcsec for j in carrington_points]
-                # Save the selected points to a common list including the file basename
-                self.points.append([self.fits_files[i+1].split('/')[-1], carrington_lon, carrington_lat, map.dsun.value])
-                plt.close()           
+
+                # Guardar los puntos seleccionados en una lista común incluyendo el nombre del archivo
+                self.points.append([self.fits_files[i+1].split('/')[-1], 
+                                    [float(lon) for lon in carrington_lon], 
+                                    [float(lat) for lat in carrington_lat], 
+                                    float(map.dsun.value)])
+
+                plt.close()
+                    
+                
+                         
         elif self.diff=='none':
             for fits_file in self.fits_files:
                 print('Procesing case '+ str(self.fits_files.index(fits_file)+1) + ' of ' + str(len(self.fits_files)))
@@ -197,7 +277,7 @@ class SelectImgPoints:
                 carrington_lon = [i.lon.arcsec for i in carrington_points]
                 carrington_lat = [i.lat.arcsec for i in carrington_points]
                 # Save the selected points to a common list including the file basename
-                self.points.append([fits_file.split('/')[-1], carrington_lon, carrington_lat, map.dsun.value])
+                self.points.append([fits_file.split('/')[-1], [float(lon) for lon in carrington_lon], [float(lat) for lat in carrington_lat], float(map.dsun.value)])
                 plt.close()             
         else:
             print('Error: diff parameter must be either "diff", "consecutive_diff" or "none"')
