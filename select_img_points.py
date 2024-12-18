@@ -109,19 +109,90 @@ class SelectImgPoints:
                     scl = 3
                 else:
                     scl = self.color_scl                 
-                # plots with white as max and black as min
-                map.plot(norm=colors.Normalize(vmin=m-scl*sd, vmax=m+scl*sd), cmap='gray', title=title)
-                ax_image = fig.add_subplot(111, projection=map.wcs)
-                # Allow the user to click on the image to select points
-                points = plt.ginput(n=-1, timeout=0)
-                # Convert the selected pixel values to Carrington coordinates using the WCS information in the .fits file and Sunpy built in functions
+
+
+                vmin_init = m - scl * sd
+                vmax_init = m + scl * sd
+
+                # Crear figura y ejes con proyección WCS
+                fig = plt.figure(figsize=(12, 10))
+                ax = fig.add_subplot(111, projection=map.wcs)  # Usamos la proyección WCS del mapa
+                plt.subplots_adjust(bottom=0.25)
+
+                # Mostrar la imagen
+                im = map.plot(norm=plt.Normalize(vmin=vmin_init, vmax=vmax_init), cmap='gray', title=title)#, axes=ax)
+
+                # Slider para brillo mínimo y máximo
+                ax_vmin = plt.axes([0.25, 0.1, 0.65, 0.03])
+                ax_vmax = plt.axes([0.25, 0.05, 0.65, 0.03])
+                slider_vmin = Slider(ax_vmin, 'Brillo min', m - 3 * sd, m + 3 * sd, valinit=vmin_init)
+                slider_vmax = Slider(ax_vmax, 'Brillo max', m - 3 * sd, m + 3 * sd, valinit=vmax_init)
+
+                # Actualizar la imagen según los sliders
+                def update(val):
+                    vmin = slider_vmin.val
+                    vmax = slider_vmax.val
+                    im.set_norm(plt.Normalize(vmin=vmin, vmax=vmax))
+                    fig.canvas.draw_idle()
+                    #return vmin, vmax
+                
+                def get_current_vmin_vmax():
+                    return slider_vmin.val, slider_vmax.val
+                
+                # Lista para almacenar los puntos seleccionados
+                points = []
+                
+                # Función para manejar los clics del mouse
+                def on_click(event):
+                    vmin, vmax = get_current_vmin_vmax()
+                    if event.inaxes == ax:  # Verificar si el clic ocurre en el eje de la imagen
+                        if event.button == 1:  # Botón izquierdo del mouse (agregar punto)
+                            points.append((event.xdata, event.ydata))
+                            ax.plot(event.xdata, event.ydata, 'r+')  # Mostrar el punto en el gráfico
+                        elif event.button == 3:  # Botón derecho del mouse (borrar último punto)
+                            if points:
+                                points.pop()  # Eliminar el último punto
+                                ax.clear()  # Limpiar el eje
+                                im = map.plot(norm=plt.Normalize(vmin=vmin, vmax=vmax), 
+                                              cmap='gray', 
+                                              title=title, 
+                                              axes=ax
+                                              )  # Volver a dibujar la imagen
+                                ax.plot(*zip(*points), 'r+')  # Redibujar los puntos restantes
+                        fig.canvas.draw()
+                    else:
+                        slider_vmin.on_changed(update)
+                        slider_vmax.on_changed(update)
+                        vmin, vmax = get_current_vmin_vmax()
+                        ax.clear()  # Limpiar el eje
+                        im = map.plot(norm=plt.Normalize(vmin=vmin, vmax=vmax), 
+                                    cmap='gray', 
+                                    title=title, 
+                                    axes=ax
+                                    )  # Volver a dibujar la imagen
+                        ax.plot(*zip(*points), 'r+')  # Redibujar los puntos restantes
+                        print("Clic fuera del área de la imagen, ignorado.")
+
+                # Conectar el evento de clic
+                cid = fig.canvas.mpl_connect('button_press_event', on_click)
+
+                # Mostrar la figura y esperar la interacción
+                print("Haz clic en la imagen para seleccionar puntos (cierra la ventana para finalizar).")
+                plt.show()
+
+                # Convertir los valores de píxeles seleccionados a coordenadas Carrington usando WCS
                 wcs = map.wcs
-                wcs_points= [wcs.pixel_to_world(j[0], j[1]) for j in points]
+                wcs_points = [wcs.pixel_to_world(j[0], j[1]) for j in points]
                 carrington_points = [SkyCoord(j.Tx, j.Ty, frame=self.coord_type, obstime=map.date) for j in wcs_points]
                 carrington_lon = [j.lon.arcsec for j in carrington_points]
                 carrington_lat = [j.lat.arcsec for j in carrington_points]
-                # Save the selected points to a common list including the file basename
-                self.points.append([self.fits_files[2*i+1].split('/')[-1], [float(lon) for lon in carrington_lon], [float(lat) for lat in carrington_lat], float(map.dsun.value)])
+
+                # Guardar los puntos seleccionados en una lista común incluyendo el nombre del archivo
+                self.points.append([self.fits_files[i+1].split('/')[-1], 
+                                    [float(lon) for lon in carrington_lon], 
+                                    [float(lat) for lat in carrington_lat], 
+                                    float(map.dsun.value)])
+
                 plt.close()
         elif self.diff=='consecutive_diff':
         # if diff, then substract two consecutive files and computes the difference before plotting and selecting points
@@ -198,17 +269,13 @@ class SelectImgPoints:
                 
                 def get_current_vmin_vmax():
                     return slider_vmin.val, slider_vmax.val
-                
-                slider_vmin.on_changed(update)
-                slider_vmax.on_changed(update)
-                #vmin, vmax = get_current_vmin_vmax()
+            
                 # Lista para almacenar los puntos seleccionados
                 points = []
                 
                 # Función para manejar los clics del mouse
                 def on_click(event):
                     vmin, vmax = get_current_vmin_vmax()
-                    print(vmin, vmax)
                     if event.inaxes == ax:  # Verificar si el clic ocurre en el eje de la imagen
                         if event.button == 1:  # Botón izquierdo del mouse (agregar punto)
                             points.append((event.xdata, event.ydata))
@@ -222,10 +289,19 @@ class SelectImgPoints:
                                               title=title, 
                                               axes=ax
                                               )  # Volver a dibujar la imagen
-                                #ax = fig.add_subplot(111, projection=map.wcs)
                                 ax.plot(*zip(*points), 'r+')  # Redibujar los puntos restantes
                         fig.canvas.draw()
                     else:
+                        slider_vmin.on_changed(update)
+                        slider_vmax.on_changed(update)
+                        vmin, vmax = get_current_vmin_vmax()
+                        ax.clear()  # Limpiar el eje
+                        im = map.plot(norm=plt.Normalize(vmin=vmin, vmax=vmax), 
+                                    cmap='gray', 
+                                    title=title, 
+                                    axes=ax
+                                    )  # Volver a dibujar la imagen
+                        ax.plot(*zip(*points), 'r+')  # Redibujar los puntos restantes
                         print("Clic fuera del área de la imagen, ignorado.")
 
                 # Conectar el evento de clic
